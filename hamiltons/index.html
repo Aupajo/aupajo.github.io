@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hamilton Power Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type="text/css" media="screen">
+      body,
+      input,
+      select {
+        font: 12pt/1.6em "Helvetica Neue", sans-serif;
+      }
+
+      h1,
+      h2 {
+        line-height: 1.4em;
+      }
+
+      body {
+        padding: 2em;
+        margin: 0 auto;
+        max-width: 40em;
+      }
+
+      em {
+        color: #da26ad;
+        font-style: normal;
+      }
+
+      a {
+        color: #7d26da;
+        text-decoration: none;
+      }
+
+      footer {
+        border-top: 1px solid #ccc;
+        margin-top: 1em;
+        padding-top: 1em;
+        text-align: right;
+      }
+
+      input,
+      select {
+        margin: 0;
+        padding: 0.2em 0.5em;
+      }
+
+      .result {
+        background: #fbf4c5;
+        padding: 0.5em 1em;
+        margin: 1em 0;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      .field-group {
+        margin: 0.5em 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>How many <em>Hamiltons</em> does it take to boil a kettle?</h1>
+
+    <p>
+      <a
+        href="https://www.rnz.co.nz/news/national/516450/as-it-happened-very-significant-response-narrowly-avoids-power-cuts-as-temperature-drops"
+        >On
+        <time datetime="2024-05-10T07:00:00+12:00"
+          >the cold morning of May 10th, 2024</time
+        ></a
+      >, Kiwis switched off appliances and reduced their electricity consumption
+      to prevent power cuts. The response from New Zealanders was
+      <a
+        href="https://www.transpower.co.nz/news/transpower-thanks-new-zealanders-reduced-power-use-morning"
+        >“comparable to saving the typical electricity use of Hamilton City”</a
+      >. The estimate given was 260 MW saved.
+    </p>
+
+    <p>
+      If we take 260 MW over the two hours kiwis were asked to reduce their
+      power, this gives us 130 MWh, or <em>1 Hamilton</em>.
+    </p>
+
+    <form id="calculator">
+      <h2>⚡️ Watts to Hamiltons</h2>
+      <label for="energy">Energy consumed</label>
+      <input
+        type="number"
+        id="energy"
+        value="1"
+        placeholder="1"
+        size="5"
+        required
+      />
+      <select id="unit">
+        <option value="1">Watts</option>
+        <option value="1000">kWh</option>
+        <option value="1000000">MWh</option>
+        <option value="1000000000">GWh</option>
+      </select>
+
+      <div class="result"></div>
+    </form>
+
+    <form id="kettle">
+      <h2>🔥 Boiling a kettle</h2>
+
+      <div class="field-group">
+        <label for="kettle-size">Kettle Size</label>
+        <select id="kettle-size">
+          <option value="1.5">1.5 litres</option>
+          <option value="1.6">1.6 litres</option>
+          <option value="1.7">1.7 litres</option>
+          <option value="1.8" selected>1.8 litres</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label for="kettle-wattage">Kettle Wattage</label>
+        <select id="kettle-wattage">
+          <option value="2000">2000 watts</option>
+          <option value="2100">2100 watts</option>
+          <option value="2200" selected>2200 watts</option>
+          <option value="2300">2300 watts</option>
+          <option value="2400">2400 watts</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label for="kettle-boil-time">Kettle Boil Time</label>
+        <span id="kettle-boil-time">5:29</span>
+      </div>
+
+      <small>
+        Based on 23°C starting water temp, 100°C ending water temp, and 80%
+        efficiency.
+        <a
+          href="https://www.canstarblue.com.au/electricity/boiling-kettle-costs/"
+          >Source</a
+        >.
+      </small>
+
+      <div class="result"></div>
+    </form>
+
+    <footer>
+      <a href="https://www.noemamag.com/we-need-to-rewild-the-internet/">🌱</a>
+    </footer>
+
+    <script>
+      const boilTimes = {
+        1.5: {
+          2000: "5:02",
+          2100: "4:47",
+          2200: "4:34",
+          2300: "4:22",
+          2400: "4:10",
+        },
+        1.6: {
+          2000: "5:22",
+          2100: "5:06",
+          2200: "4:52",
+          2300: "4:40",
+          2400: "4:28",
+        },
+        1.7: {
+          2000: "5:42",
+          2100: "5:25",
+          2200: "5:10",
+          2300: "4:57",
+          2400: "4:45",
+        },
+        1.8: {
+          2000: "6:02",
+          2100: "5:45",
+          2200: "5:29",
+          2300: "5:15",
+          2400: "5:02",
+        },
+      };
+
+      const kettleForm = document.querySelector("#kettle");
+      const kettleResult = kettleForm.querySelector(".result");
+      const boilTimeElement = kettleForm.querySelector("#kettle-boil-time");
+
+      const ONE_HAMILTON_IN_MWH = 130;
+
+      function calculateKettleTime(event) {
+        const litres = parseFloat(document.querySelector("#kettle-size").value);
+
+        const wattage = parseFloat(
+          document.querySelector("#kettle-wattage").value
+        );
+
+        const boilTime = boilTimes[litres][wattage];
+
+        boilTimeElement.textContent = boilTime;
+
+        const [mins, remainingSeconds] = boilTime.split(":").map(parseFloat);
+
+        const secondsBoiling = mins * 60 + remainingSeconds;
+        const hoursBoiling = secondsBoiling / 3600;
+        const energyConsumedInWattHours = wattage * hoursBoiling;
+        const energyConsumedInMWh = energyConsumedInWattHours / 1_000_000;
+        const energyConsumedInHamiltons =
+          energyConsumedInMWh / ONE_HAMILTON_IN_MWH;
+        const energyConsumedInNanoHamiltons = energyConsumedInHamiltons * 1e9;
+
+        kettleResult.textContent = `Energy consumed: ${energyConsumedInNanoHamiltons.toFixed(
+          2
+        )} nanoHamiltons`;
+      }
+
+      calculateKettleTime();
+
+      kettleForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        calculateKettleTime();
+      });
+
+      kettleForm.addEventListener("change", calculateKettleTime);
+
+      const calculatorForm = document.querySelector("#calculator");
+      const resultElement = calculatorForm.querySelector(".result");
+
+      const siScale = Object.entries({
+        Hamilton: 1,
+        miliHamilton: 1_000,
+        microHamilton: 1_000_000,
+        nanoHamilton: 1_000_000_000,
+        picoHamilton: 1_000_000_000_000,
+      });
+
+      function calculateEnergy() {
+        const energy = parseFloat(document.querySelector("#energy").value);
+        const unit = parseFloat(document.querySelector("#unit").value);
+
+        const energyInWattHours = energy * unit;
+        const energyInMWh = energyInWattHours / 1_000_000;
+        const energyInHamiltons = energyInMWh / ONE_HAMILTON_IN_MWH;
+
+        const [suffix, scale] =
+          siScale.find(([, scale]) => energyInHamiltons * scale >= 1) ||
+          siScale.at(-1);
+
+        const value = energyInHamiltons * scale;
+
+        resultElement.textContent = `${
+          isNaN(value) ? "-" : value.toFixed(2)
+        } ${suffix}`;
+      }
+
+      calculateEnergy();
+
+      calculatorForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        calculateKettleTime();
+      });
+
+      calculatorForm.addEventListener("change", calculateEnergy);
+      calculatorForm.addEventListener("keyup", calculateEnergy);
+    </script>
+  </body>
+</html>
