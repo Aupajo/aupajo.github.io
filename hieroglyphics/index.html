@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Heiroglyphics Encoding</title>
+    <style>
+      body {
+        background-color: #faf7ed;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      body,
+      textarea {
+        color: #312d28;
+        font: 18pt/1.6 "Gill Sans", "Gill Sans MT", sans-serif;
+      }
+
+      h1 {
+        margin: 0;
+      }
+
+      main {
+        border-top: 1px solid #d7d3c8;
+        display: flex;
+        flex: 1;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0;
+      }
+
+      h1,
+      summary,
+      textarea {
+        padding: 1rem;
+        flex: 1;
+      }
+
+      summary small {
+        display: block;
+      }
+
+      textarea {
+        background: transparent;
+        flex: 1;
+        border: none;
+        outline: none;
+        resize: none;
+      }
+
+      textarea::placeholder {
+        color: #312d28;
+        opacity: 0.5;
+      }
+
+      #decode {
+        background-color: #dbcba0;
+        color: #312d28;
+        text-shadow: 1px 1px 0 #fff;
+      }
+
+      #decode:not(:placeholder-shown) {
+        font-size: 3em;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Heiroglyphics Encoding</h1>
+
+      <summary>
+        Shifts unicode characters to the heiroglyphics range.
+        <small>
+          Does <em>not</em> translate your text into heiroglyphics.
+        </small>
+      </summary>
+    </header>
+
+    <main>
+      <textarea
+        id="encode"
+        placeholder="Encode text to heiroglyphics..."
+        autofocus
+      ></textarea>
+
+      <textarea
+        id="decode"
+        placeholder="Decode heiroglyphics to text..."
+      ></textarea>
+    </main>
+
+    <script type="module">
+      const HEIROGLYPHICS_OFFSET = 0x13000;
+      const VARIATION_SELECTOR = 0xfe0f;
+      const encodeElement = document.getElementById("encode");
+      const decodeElement = document.getElementById("decode");
+
+      encodeElement.addEventListener("input", () => {
+        const encoded = encodeToHieroglyphics(encodeElement.value);
+        decodeElement.value = encoded;
+      });
+
+      decodeElement.addEventListener("input", () => {
+        const decoded = decodeFromHieroglyphics(decodeElement.value);
+        encodeElement.value = decoded;
+      });
+
+      function encodeToHieroglyphics(input) {
+        let result = "";
+        for (const char of input) {
+          const code = char.codePointAt(0);
+          const hiero = code + HEIROGLYPHICS_OFFSET;
+          result +=
+            String.fromCodePoint(hiero) +
+            String.fromCodePoint(VARIATION_SELECTOR) +
+            " ";
+        }
+        return result.trim();
+      }
+
+      function decodeFromHieroglyphics(input) {
+        const cleaned = input.replace(/\s+/g, "");
+
+        let codepoints = [];
+        for (let i = 0; i < cleaned.length; ) {
+          const cp = cleaned.codePointAt(i);
+          codepoints.push(cp);
+          i += cp > 0xffff ? 2 : 1; // Advance correctly for surrogate pairs
+        }
+
+        let original = "";
+        for (let i = 0; i < codepoints.length; i += 2) {
+          const decoded = codepoints[i] - HEIROGLYPHICS_OFFSET;
+          original += String.fromCodePoint(decoded);
+        }
+
+        return original;
+      }
+    </script>
+  </body>
+</html>
